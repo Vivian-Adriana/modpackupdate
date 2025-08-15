@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Modpack - Suggestion Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .accepted .stat-number { color: #27ae60; }
+        .rejected .stat-number { color: #e74c3c; }
+        .total .stat-number { color: #3498db; }
+
+        .notice-section {
+            background: rgba(255, 235, 59, 0.9);
+            border-left: 5px solid #ff9800;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .notice-section h2 {
+            color: #e65100;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+        }
+
+        .notice-section h2::before {
+            content: "⚠️";
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .notice-section p {
+            color: #bf360c;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .filters {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9em;
+        }
+
+        .filter-btn.active {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .filter-all { background: #3498db; color: white; }
+        .filter-all.active { background: #2980b9; }
+
+        .filter-accepted { background: #27ae60; color: white; }
+        .filter-accepted.active { background: #229954; }
+
+        .filter-rejected { background: #e74c3c; color: white; }
+        .filter-rejected.active { background: #c0392b; }
+
+        .search-bar {
+            width: 100%;
+            padding: 12px 20px;
+            margin-top: 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-bar:focus {
+            border-color: #3498db;
+        }
+
+        .table-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9em;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        tr:hover {
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status.accepted {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+
+        .status.rejected {
+            background: #fadbd8;
+            color: #e74c3c;
+        }
+
+        .mod-name {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .final-entry {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #7f8c8d;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        .row-hidden {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .filter-buttons {
+                justify-content: stretch;
+            }
+
+            .filter-btn {
+                flex: 1;
+                text-align: center;
+            }
+
+            table {
+                font-size: 0.8em;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+
+            .final-entry {
+                max-width: 200px;
+            }
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 30px;
+        }
+
+        .github-corner {
+            position: fixed;
+            top: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .github-corner svg {
+            fill: rgba(255, 255, 255, 0.8);
+            color: #667eea;
+            width: 80px;
+            height: 80px;
+        }
+
+        .github-corner:hover svg {
+            fill: rgba(255, 255, 255, 1);
+        }
+
+        .export-btn {
+            background: #27ae60;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: #229954;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Minecraft Modpack Analysis</h1>
+            <p>Community Suggestions vs Final Modlist Comparison</p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-number" id="totalCount">134</div>
+                <div class="stat-label">Total Suggestions</div>
+            </div>
+            <div class="stat-card accepted">
+                <div class="stat-number" id="acceptedCount">99</div>
+                <div class="stat-label">Accepted Mods</div>
+            </div>
+            <div class="stat-card rejected">
+                <div class="stat-number" id="rejectedCount">35</div>
+                <div class="stat-label">Rejected Mods</div>
+            </div>
+        </div>
+
+        <div class="notice-section">
+            <h2>Important Notice</h2>
+            <p><strong>There's a chance some player suggestions may have been missed during this analysis.</strong></p>
+            <p>We've created a thread in the <strong>#announcements</strong> channel where community members can mention any mods that were suggested but might not appear in this comparison.</p>
+            <p>Please check the thread and let us know if you spot any missing suggestions! Your input helps make sure we have a complete picture of the community's mod preferences.</p>
+        </div>
+
+        <div class="filters">
+            <div class="filter-buttons">
+                <button class="filter-btn filter-all active" onclick="filterTable('all')">All Mods</button>
+                <button class="filter-btn filter-accepted" onclick="filterTable('accepted')">Accepted Only</button>
+                <button class="filter-btn filter-rejected" onclick="filterTable('rejected')">Rejected Only</button>
+                <button class="export-btn" onclick="exportToCSV()">📄 Export CSV</button>
+            </div>
+            <input type="text" class="search-bar" id="searchInput" placeholder="🔍 Search for mods..." onkeyup="searchTable()">
+        </div>
+
+        <div class="table-container">
+            <table id="modTable">
+                <thead>
+                    <tr>
+                        <th>Mod Name</th>
+                        <th>Status</th>
+                        <th>Notes</th>
+                        <th>Final Modlist Entry</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Table rows will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            <p>Generated on August 15, 2025 | Community-driven modpack development</p>
+            <p>📊 <strong>73.9% acceptance rate</strong> | Last updated: <span id="lastUpdated"></span></p>
+        </div>
+
+        <!-- GitHub Corner -->
+        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" class="github-corner" aria-label="View source on GitHub" target="_blank">
+            <svg viewBox="0 0 250 250" aria-hidden="true">
+                <path d="m0,0 0,250 250,0 0,-250 -250,0 Z" fill="currentColor"></path>
+                <path d="m62.5,200 187.5,0 0,-187.5 -187.5,0 0,187.5 Z" fill="white"></path>
+                <path d="m90,62.5 70,0 0,70 -70,0 0,-70 Z" fill="currentColor"></path>
+            </svg>
+        </a>
+    </div>
+
+    <script>
+        // Complete mod data from CSV analysis
+        const modData = [
+            {name: "Dragon Mounts Legacy", status: "Accepted", notes: "Added to final modlist", finalEntry: "Dragon Mounts: Legacy (dragonmounts-1.20.1-1.2.3-beta.jar)"},
+            {name: "Icarus", status: "Accepted", notes: "Added to final modlist", finalEntry: "Icarus (https://curseforge.com/projects/428151) (Icarus-Forge-2.12.0.jar)"},
+            {name: "Roots Classic", status: "Accepted", notes: "Added to final modlist", finalEntry: "Roots Classic (https://www.curseforge.com/minecraft/mc-mods/roots-classic) (RootsClassic-1.20.1-1.4.2.jar)"},
+            {name: "Sons of Sins", status: "Accepted", notes: "Added to final modlist", finalEntry: "Sons of Sins (https://legacy.curseforge.com/minecraft/mc-mods/sons-of-sins) (sons-of-sins-1.20.1-2.1.9.jar)"},
+            {name: "Hexerei", status: "Accepted", notes: "Added to final modlist", finalEntry: "Hexerei (hexerei-0.4.2.3.jar)"},
+            {name: "Biomancy", status: "Accepted", notes: "Added to final modlist", finalEntry: "Biomancy 2 (https://modrinth.com/mod/biomancy) (biomancy-forge-1.20.1-2.8.19.0.jar)"},
+            {name: "Goety Cataclysm", status: "Accepted", notes: "Added to final modlist", finalEntry: "Goety Cataclysm (https://github.com/Polarice3/Goety_Cataclysm) (goety_cataclysm-1.20-1.5.0.jar)"},
+            {name: "Goety", status: "Accepted", notes: "Added to final modlist", finalEntry: "Goety (https://github.com/Polarice3/Goety-2) (goety-2.5.36.1.jar)"},
+            {name: "Embers Rekindled", status: "Accepted", notes: "Added to final modlist", finalEntry: "Embers Rekindled (embersrekindled-1.20.1-1.4.1.jar)"},
+            {name: "Malum", status: "Accepted", notes: "Added to final modlist", finalEntry: "Malum (malum-1.20.1-1.6.7.jar)"},
+            {name: "Feywild", status: "Accepted", notes: "Added to final modlist", finalEntry: "Feywild (Feywild-1.20.1-4.0.4.jar)"},
+            {name: "Hexcasting", status: "Accepted", notes: "Added to final modlist", finalEntry: "Hex Casting (https://github.com/gamma-delta/HexMod) (hexcasting-forge-1.20.1-0.11.2.jar)"},
+            {name: "Goety Spillage", status: "Accepted", notes: "Added to final modlist", finalEntry: "Goety and Spillage (goety_spillage-1.20-1.4.2.jar)"},
+            {name: "Hexalia", status: "Accepted", notes: "Added to final modlist", finalEntry: "Hexalia (hexalia-1.2.6-1.20.1+forge.jar)"},
+            {name: "Mana and Artifice", status: "Accepted", notes: "Added to final modlist", finalEntry: "Mana and Artifice (https://manaandartifice.com/) (mna-forge-1.20.1-3.1.11-all.jar)"},
+            {name: "Mana and Artifice Apotheosis Compat", status: "Accepted", notes: "Added to final modlist", finalEntry: "Mana and Artifice Apotheosis Compat (mna_attrib_apoth-0.5-1.20.1.jar)"},
+            {name: "Factions and Curiosities", status: "Accepted", notes: "Added to final modlist", finalEntry: "Factions And Curiosities (fnc-1.2.10.jar)"},
+            {name: "BotanyPotsTiers", status: "Accepted", notes: "Added to final modlist", finalEntry: "BotanyPotsTiers (https://www.curseforge.com/minecraft/mc-mods/botany-pots-tiers) (BotanyPotsTiers-Forge-1.20.1-6.0.2.jar)"},
+            {name: "Decocraft", status: "Accepted", notes: "Added to final modlist", finalEntry: "Decocraft (decocraft-3.0.0.12-beta-1.20.1-slim.jar)"},
+            {name: "Enigmatic Legacy", status: "Accepted", notes: "Added to final modlist", finalEntry: "Enigmatic Legacy (https://www.curseforge.com/minecraft/mc-mods/enigmatic-legacy) (EnigmaticLegacy-2.30.1.jar)"},
+            {name: "Iron Chests", status: "Accepted", notes: "Added to final modlist", finalEntry: "Iron Chests (https://minecraft.curseforge.com/projects/iron-chests) (ironchest-1.20.1-14.4.4.jar)"},
+            {name: "Mekanism Covers", status: "Accepted", notes: "Added to final modlist", finalEntry: "Mekanism Covers (mekanismcovers-1.3-BETA+1.20.jar)"},
+            {name: "More Mekanism Processing", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Oh The Biomes We've Gone", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Enigmatic Legacy Tweak", status: "Accepted", notes: "Added to final modlist", finalEntry: "Enigmatic Legacy Tweak (enigmaticlegacytweak-1.0.0.jar)"},
+            {name: "Brutality (Terramity addon)", status: "Accepted", notes: "Added to final modlist", finalEntry: "Brutality (brutality-0.6.1-1.20.1.jar)"},
+            {name: "Lethality (Terramity addon)", status: "Accepted", notes: "Added to final modlist", finalEntry: "Lethality (lethality-0.3.1-1.20.1.jar)"},
+            {name: "Serene Seasons", status: "Accepted", notes: "Added to final modlist", finalEntry: "Serene Seasons (https://www.curseforge.com/minecraft/mc-mods/serene-seasons) (SereneSeasons-forge-1.20.1-9.1.0.2.jar)"},
+            {name: "Grecocraft", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "MOA Decor Toys", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "MOA Decor Cookery", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Macaws Lights and Lamps", status: "Accepted", notes: "Added to final modlist", finalEntry: "Macaw's Lights and Lamps (https://www.curseforge.com/projects/502372) (mcw-lights-1.1.0-mc1.20.1forge.jar)"},
+            {name: "BetterEnd", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Macaws Paintings", status: "Accepted", notes: "Added to final modlist", finalEntry: "Macaw's Paintings (https://www.curseforge.com/projects/438116) (mcw-paintings-1.0.5-1.20.1forge.jar)"},
+            {name: "Fantasy's Furniture", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Alex's Caves", status: "Accepted", notes: "Added to final modlist", finalEntry: "Alex's Caves (alexscaves-2.0.2.jar)"},
+            {name: "Alshanex Familiars Mod", status: "Accepted", notes: "Added to final modlist", finalEntry: "Alshanex Familiars Mod (alshanex_familiars-1.20.1_v1.1.2_HotFix.jar)"},
+            {name: "Ice and Fire", status: "Accepted", notes: "Added to final modlist", finalEntry: "Ice and Fire (https://www.curseforge.com/minecraft/mc-mods/ice-and-fire-dragons) (iceandfire-2.1.13-1.20.1-beta-5.jar)"},
+            {name: "Ice and Fire: Spellbooks", status: "Accepted", notes: "Added to final modlist", finalEntry: "Ice and Fire: Spellbooks (ice_and_fire_spellbooks-2.3.1-1.20.1.jar)"},
+            {name: "Iron's Recipe Additions", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "JEI Integration", status: "Accepted", notes: "Added to final modlist", finalEntry: "JEI Integration (https://curseforge.com/minecraft/mc-mods/jei-integration) (jeiintegration_1.20.1-10.0.0.jar)"},
+            {name: "KeybindsPurger", status: "Accepted", notes: "Added to final modlist", finalEntry: "KeybindsPurger (https://modrinth.com/mod/keybindspurger) (keybindspurger-1.20.1-forge-1.3.3.jar)"},
+            {name: "Mowzie's Mobs", status: "Accepted", notes: "Added to final modlist", finalEntry: "Mowzie's Mobs (https://www.curseforge.com/minecraft/mc-mods/mowzies-mobs) (mowziesmobs-1.7.3.jar)"},
+            {name: "ParCool!", status: "Accepted", notes: "Added to final modlist", finalEntry: "ParCool! (https://www.curseforge.com/minecraft/mc-mods/parcool) (ParCool-1.20.1-3.4.1.4.jar)"},
+            {name: "ParCool+ Compatibility Addon", status: "Accepted", notes: "Added to final modlist", finalEntry: "ParCool+ / Compatibility Addon (ParCool-CompatibilityAddon-1.20.1-3.3.1.0-1.0.jar)"},
+            {name: "Relics", status: "Accepted", notes: "Added to final modlist", finalEntry: "Relics (https://www.curseforge.com/minecraft/mc-mods/relics-mod) (relics-1.20.1-0.8.0.9.jar)"},
+            {name: "Silent Compat", status: "Accepted", notes: "Added to final modlist", finalEntry: "Silent Compat (SilentCompat-forge-1.20.1-1.4.0.jar)"},
+            {name: "Silent's Gems: Base", status: "Rejected", notes: "Not found in final modlist (but Silent Gear is present)", finalEntry: "N/A"},
+            {name: "Storage Drawers", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "T.O Magic 'n Extras", status: "Accepted", notes: "Added to final modlist", finalEntry: "T.O Magic 'n Extras (https://www.curseforge.com/minecraft/mc-mods/to-tweaks-irons-spells) (traveloptics-5.4.2-1.20.1.jar)"},
+            {name: "Trackwork Mod", status: "Accepted", notes: "Added to final modlist", finalEntry: "Trackwork Mod (trackwork-1.20.1-1.1.1b.jar)"},
+            {name: "Valkyrien Skies 2", status: "Accepted", notes: "Added to final modlist", finalEntry: "Valkyrien Skies 2 (valkyrienskies-120-2.3.0-beta.9.jar)"},
+            {name: "Apotheotic Additions", status: "Accepted", notes: "Added to final modlist", finalEntry: "Apotheotic Additions (https://mcreator.net) (ApotheoticAdditionsV2.2.2.jar)"},
+            {name: "Attributizer", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Enigmatic Addons", status: "Accepted", notes: "Added to final modlist", finalEntry: "Enigmatic Addons (enigmaticaddons-1.2.5.jar)"},
+            {name: "Mekanism Cardboard Tooltip", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "MnA Attributes", status: "Accepted", notes: "Added to final modlist", finalEntry: "MnA Attributes (mna_attributes-forge-1.20.1-0.3.0.jar)"},
+            {name: "Terramity", status: "Accepted", notes: "Added to final modlist", finalEntry: "Terramity (https://www.curseforge.com/minecraft/mc-mods/terramity) (terramity-0.9.8-forge-1.20.1.jar)"},
+            {name: "Warium", status: "Accepted", notes: "Added to final modlist", finalEntry: "Warium (https://mcreator.net) (Warium 1.0.6.jar)"},
+            {name: "Fallen Gems & Affixes", status: "Accepted", notes: "Added to final modlist", finalEntry: "Fallen Gems & Affixes (https://github.com/KiraKayn/Fallen-Gems-Affixes) (fallen_gems_affixes-1.20.1-1.2.8.jar)"},
+            {name: "Mystical Agriculture", status: "Accepted", notes: "Added to final modlist", finalEntry: "Mystical Agriculture (https://www.curseforge.com/projects/246640) (MysticalAgriculture-1.20.1-7.0.18.jar)"},
+            {name: "Mystical Agriculture Automatic Resources", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Tinkers Construct", status: "Accepted", notes: "Added to final modlist", finalEntry: "Tinkers' Construct (https://www.curseforge.com/minecraft/mc-mods/tinkers-construct) (TConstruct-1.20.1-3.10.2.92.jar)"},
+            {name: "Alex's Mobs", status: "Accepted", notes: "Added to final modlist", finalEntry: "Alex's Mobs (https://www.curseforge.com/minecraft/mc-mods/alexs-mobs) (alexsmobs-1.22.9.jar)"},
+            {name: "AmbientSounds", status: "Accepted", notes: "Added to final modlist", finalEntry: "AmbientSounds (https://modrinth.com/mod/ambientsounds) (AmbientSounds_FORGE_v6.1.11_mc1.20.1.jar)"},
+            {name: "Ars Nouveau's Flavors & Delight", status: "Accepted", notes: "Added to final modlist", finalEntry: "Ars Nouveau's Flavors & Delight (arsdelight-1.1.6.jar)"},
+            {name: "CBC Advanced Technology", status: "Accepted", notes: "Added to final modlist", finalEntry: "CBC Advanced Technology (cbc_at_Forge_1.20.1_0.1.3b.jar)"},
+            {name: "CBC Modern Warfare", status: "Accepted", notes: "Added to final modlist", finalEntry: "CBC Modern Warfare (cbcmodernwarfare-0.0.6c+mc.1.20.1-forge.jar)"},
+            {name: "CC: VS", status: "Accepted", notes: "Added to final modlist", finalEntry: "CC: VS (cc_vs-1.20.1-forge-0.2.2.jar)"},
+            {name: "CC:C Bridge", status: "Accepted", notes: "Added to final modlist", finalEntry: "CC:C Bridge (https://cccbridge.kleinbox.dev/) (cccbridge-mc1.20.1-v1.7.1-forge.jar)"},
+            {name: "CCLink", status: "Accepted", notes: "Added to final modlist", finalEntry: "CCLink (cclink-5.0.0-beta1-1.20.1 (1).jar)"},
+            {name: "Caged Mobs", status: "Accepted", notes: "Added to final modlist", finalEntry: "Caged Mobs (https://www.curseforge.com/minecraft/mc-mods/caged-mobs) (cagedmobs-1.20.1-forge-2.0.5.jar)"},
+            {name: "Clockwork Additions", status: "Rejected", notes: "Not found in final modlist (but Clockwork: Create x Valkyrien Skies is present)", finalEntry: "N/A"},
+            {name: "Clockwork: Create x Valkyrien Skies", status: "Accepted", notes: "Added to final modlist", finalEntry: "Clockwork: Create x Valkyrien Skies (clockwork-1.20.1-0.1.16-forge-b3b22e39fe.jar)"},
+            {name: "Create Big Cannons", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create Big Cannons (createbigcannons-5.9.1-mc.1.20.1-forge.jar)"},
+            {name: "Create Diesel Generators", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create Diesel Generators (https://www.curseforge.com/minecraft/mc-mods/create-diesel-generators) (createdieselgenerators-1.20.1-1.3.4.jar)"},
+            {name: "Create Mechanical Extruder", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create Mechanical Extruder (create_mecanical_extruder-1.20.1-1.6.10-6.0.6.jar)"},
+            {name: "Create: Oppenheimered", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Create: TrainUtilities", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create: TrainUtilities (trainutilities-forge-3.0.0-C6.jar)"},
+            {name: "Critters and Companions", status: "Accepted", notes: "Added to final modlist", finalEntry: "Critters and Companions (crittersandcompanions-forge-1.20.1-2.3.1.jar)"},
+            {name: "Dragonseeker", status: "Accepted", notes: "Added to final modlist", finalEntry: "Dragonseeker (dragonseeker-1.2.0-1.20.1.jar)"},
+            {name: "Dungeons and Taverns", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Inventory Pets", status: "Accepted", notes: "Added to final modlist", finalEntry: "Inventory Pets (https://curseforge.com/minecraft/mc-mods/inventory-pets) (inventorypets-1.20.1-2.2.1.jar)"},
+            {name: "JadeColonies", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Just Enough Guns", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Modern Train Parts", status: "Accepted", notes: "Added to final modlist", finalEntry: "Modern Train Parts (https://www.curseforge.com/minecraft/mc-mods/create-modern-train-parts) (moderntrainparts-0.1.7-forge-mc1.20.1-cr0.5.1.f.jar)"},
+            {name: "Mowzie's Cataclysm", status: "Accepted", notes: "Added to final modlist", finalEntry: "Mowzie's Cataclysm (mowzies_cataclysm-1.2.0.jar)"},
+            {name: "Mo' Than Enough Guns", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Rogue Guns", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "What Are They Up To", status: "Accepted", notes: "Added to final modlist", finalEntry: "What Are They Up To (watut-forge-1.20.1-1.2.3.jar)"},
+            {name: "VSChunkLoader", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "VS Create Armor", status: "Accepted", notes: "Added to final modlist", finalEntry: "Note: Similar mod may be in final list, needs verification"},
+            {name: "Tameable Beasts", status: "Accepted", notes: "Added to final modlist", finalEntry: "Tameable Beasts (tameablebeasts-6.2.jar)"},
+            {name: "Alex's Delight", status: "Accepted", notes: "Added to final modlist", finalEntry: "Alex's Delight (alexsdelight-1.5.jar)"},
+            {name: "Alex's Mobs - Naturalist Compat", status: "Accepted", notes: "Added to final modlist", finalEntry: "Alex's Mobs - Naturalist Compat (https://modrinth.com/mod/alexs-mobs-naturalist-compat) (Compat_AlexsMobs-Naturalist.jar)"},
+            {name: "Cluttered", status: "Accepted", notes: "Added to final modlist", finalEntry: "Cluttered (https://mcreator.net) (cluttered-2.1-1.20.1.jar)"},
+            {name: "Create Deco", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create Deco (createdeco-2.0.3-1.20.1-forge.jar)"},
+            {name: "Create: Design n' Decor", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create: Design n' Decor (design_decor-0.4.0b-1.20.1.jar)"},
+            {name: "Cuisine Delight", status: "Accepted", notes: "Added to final modlist", finalEntry: "Cuisine Delight (cuisinedelight-1.1.17.jar)"},
+            {name: "Cull Less Leaves Reforged", status: "Accepted", notes: "Added to final modlist", finalEntry: "Cull Less Leaves Reforged (CullLessLeaves-Reforged-1.20.1-1.0.5.jar)"},
+            {name: "Cut Through", status: "Accepted", notes: "Added to final modlist", finalEntry: "Cut Through (https://github.com/Fuzss/cutthrough) (CutThrough-v8.0.2-1.20.1-Forge.jar)"},
+            {name: "Explorer's Compass", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Faunify", status: "Accepted", notes: "Added to final modlist", finalEntry: "Faunify (faunify-forge-1.20.1-1.2.1.jar)"},
+            {name: "Furnitury", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Habitat", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Not Enough Recipe Book", status: "Accepted", notes: "Added to final modlist", finalEntry: "Not Enough Recipe Book (Not Enough Recipe Book-FORGE-0.4.1+1.20.1.jar)"},
+            {name: "Oh The Trees You'll Grow", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Simple Farming", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "YUNG's Bridges", status: "Accepted", notes: "Added to final modlist", finalEntry: "YUNG's Bridges (https://www.curseforge.com/minecraft/mc-mods/yungs-bridges) (YungsBridges-1.20-Forge-4.0.3.jar)"},
+            {name: "YUNG's Cave Biomes", status: "Accepted", notes: "Added to final modlist", finalEntry: "YUNG's Cave Biomes (https://www.curseforge.com/minecraft/mc-mods/yungs-cave-biomes) (YungsCaveBiomes-1.20.1-Forge-2.0.5.jar)"},
+            {name: "Chisels and Bits", status: "Accepted", notes: "Added to final modlist", finalEntry: "chisels-and-bits (chisels-and-bits-forge-1.4.148.jar)"},
+            {name: "Create: Bells & Whistles", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create: Bells & Whistles (bellsandwhistles-0.4.5-1.20.x-Create6.0+.jar)"},
+            {name: "Create Ender Transmission", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create Ender Transmission (createendertransmission-2.1.0-1.20.1.jar)"},
+            {name: "Create Recycling", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create Recycling (https://www.youtube.com/@nocubemc) (create_recycle_1.0.2_forge_1.20.1.jar)"},
+            {name: "Create Sifter", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Create: Connected", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create: Connected (https://github.com/hlysine/create_connected) (create_connected-1.1.7-mc1.20.1-all.jar)"},
+            {name: "Create: Copycats+", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create: Copycats+ (https://github.com/copycats-plus/copycats) (copycats-3.0.2+mc.1.20.1-forge.jar)"},
+            {name: "Create: Interactive", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create: Interactive (create_interactive-1.1.1-beta.4_1.20.1-forge.jar)"},
+            {name: "Create: Numismatics", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create: Numismatics (CreateNumismatics-1.0.15+forge-mc1.20.1.jar)"},
+            {name: "Create: Power Loader", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create: Power Loader (https://github.com/hlysine/create_power_loader) (create_power_loader-2.0.3-mc1.20.1.jar)"},
+            {name: "Create: Propulsion", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create: Propulsion (https://modrinth.com/mod/create-propulsion) (createpropulsion-0.2.1.jar)"},
+            {name: "Create: Radars", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create: Radars (create_radar-0.3.1+mc1.20.1-all.jar)"},
+            {name: "Create: Tweaked Controllers", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create: Tweaked Controllers (https://github.com/getItemFromBlock/Create-Tweaked-Controllers) (create_tweaked_controllers-1.20.1-1.2.5.jar)"},
+            {name: "VS Tournament Mod", status: "Accepted", notes: "Added to final modlist", finalEntry: "VS Tournament Mod (tournament-1.20.1-forge-1.1.0_beta-5.3+af35b3821f.jar)"},
+            {name: "VS Eureka Mod", status: "Accepted", notes: "Added to final modlist", finalEntry: "VS Eureka Mod (eureka-1201-1.5.1-beta.3.jar)"},
+            {name: "Mekanism Extras", status: "Accepted", notes: "Added to final modlist", finalEntry: "Mekanism Extras (mekanism_extras-1.20.1-1.4.4.jar)"},
+            {name: "RPG Origins", status: "Accepted", notes: "Added to final modlist", finalEntry: "RPG Origins (RPG Origins Forge 1.4.4.jar)"},
+            {name: "Fantastical Origins", status: "Accepted", notes: "Added to final modlist", finalEntry: "FantasticalOrigins (FantasticalOrigins 1.7.1.jar)"},
+            {name: "Origins Forge", status: "Accepted", notes: "Added to final modlist", finalEntry: "Origins (origins-forge-1.20.1-1.10.0.9-all.jar)"},
+            {name: "Celestisynth", status: "Accepted", notes: "Added to final modlist", finalEntry: "Celestisynth (celestisynth-1.20.1-1.3.2.jar)"},
+            {name: "Alex's Caves Exemplified", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "RAC Compat", status: "Accepted", notes: "Added to final modlist", finalEntry: "RAC-Compat (https://www.curseforge.com/minecraft/mc-mods/rac-compat) (raccompat-1.20.1-0.1.3.jar)"},
+            {name: "RAM Compat", status: "Accepted", notes: "Added to final modlist", finalEntry: "RAM-Compat (https://www.curseforge.com/minecraft/mc-mods/ram-compat) (ramcompat-1.20.1-0.1.4.jar)"},
+            {name: "Rats", status: "Accepted", notes: "Added to final modlist", finalEntry: "Rats (https://www.curseforge.com/minecraft/mc-mods/rats) (Rats-1.20.1-8.1.3.jar)"},
+            {name: "Mekanism", status: "Accepted", notes: "Added to final modlist", finalEntry: "Mekanism (https://www.curseforge.com/projects/268560) (Mekanism-1.20.1-10.4.15.75.jar)"},
+            {name: "Create", status: "Accepted", notes: "Added to final modlist", finalEntry: "Create (https://www.curseforge.com/projects/328085) (create-1.20.1-0.5.1.j.jar)"},
+            {name: "Artifacts", status: "Accepted", notes: "Added to final modlist", finalEntry: "Artifacts (https://www.curseforge.com/projects/312353) (artifacts-forge-9.5.16.jar)"},
+            {name: "Productive Bees", status: "Accepted", notes: "Added to final modlist", finalEntry: "Productive Bees (https://www.curseforge.com/projects/377897) (productivebees-1.20.1-12.6.0.jar)"},
+            {name: "Centrifuge Tiers Reproduced", status: "Accepted", notes: "Added to final modlist", finalEntry: "Centrifuge Tiers Reproduced (https://www.curseforge.com/minecraft/mc-mods/centrifuge-tiers-reproduced) (centrifugetiersreproduced-1.20.1-1.4.2.jar)"},
+            {name: "Pylons", status: "Accepted", notes: "Added to final modlist", finalEntry: "Pylons (https://www.curseforge.com/projects/518211) (pylons-1.20.1-4.2.1.jar)"},
+            {name: "Super Factory Manager", status: "Accepted", notes: "Added to final modlist", finalEntry: "Super Factory Manager (SFM) (https://www.curseforge.com/projects/306935) (Super Factory Manager (SFM)-MC1.20.1-4.21.0.jar)"},
+            {name: "Reliquary", status: "Accepted", notes: "Added to final modlist", finalEntry: "Reliquary (https://www.curseforge.com/projects/241319) (reliquary-1.20.1-2.0.45.1248.jar)"},
+            {name: "Extra Disks for RS", status: "Accepted", notes: "Added to final modlist", finalEntry: "Extra Disks (https://www.curseforge.com/projects/351491) (ExtraDisks-1.20.1-3.0.3.jar)"},
+            {name: "AE2 Inf Storage Disk", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Thermal Expansion", status: "Accepted", notes: "Added to final modlist", finalEntry: "Thermal Expansion (https://www.curseforge.com/projects/69163) (thermal_expansion-1.20.1-11.0.1.29.jar)"},
+            {name: "Baubley Heart Canisters", status: "Accepted", notes: "Added to final modlist", finalEntry: "Baubley Heart Canisters (https://www.curseforge.com/projects/282947) (baubley-heart-canisters-1.20.1-1.1.0.jar)"},
+            {name: "Colorful Hearts", status: "Accepted", notes: "Added to final modlist", finalEntry: "Colorful Hearts (https://www.curseforge.com/projects/854213) (colorfulhearts-forge-1.20.1-4.3.16.jar)"},
+            {name: "Modular Routers", status: "Accepted", notes: "Added to final modlist", finalEntry: "Modular Routers (https://www.curseforge.com/projects/250294) (modular-routers-12.1.1+mc1.20.1.jar)"},
+            {name: "Ex Pattern Provider", status: "Rejected", notes: "Not found in final modlist", finalEntry: "N/A"},
+            {name: "Pam's HarvestCraft 2 Food Core", status: "Accepted", notes: "Added to final modlist", finalEntry: "Pam's HarvestCraft 2 - Food Core (pamhc2foodcore-1.20.4-1.0.5.jar)"},
+            {name: "Pam's HarvestCraft 2 Crops", status: "Accepted", notes: "Added to final modlist", finalEntry: "Pam's HarvestCraft 2 - Crops (pamhc2crops-1.20-1.0.3.jar)"},
+            {name: "Pam's HarvestCraft 2 Trees", status: "Accepted", notes: "Added to final modlist", finalEntry: "Pam's HarvestCraft 2 - Trees (pamhc2trees-1.20-1.0.2.jar)"},
+            {name: "Pam's HarvestCraft 2 Food Extended", status: "Accepted", notes: "Added to final modlist", finalEntry: "Pam's HarvestCraft 2 - Food Extended (pamhc2foodextended-1.20.4-1.0.1.jar)"}
+        ];
+
+        function populateTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            modData.forEach(mod => {
+                const row = document.createElement('tr');
+                row.className = `mod-row ${mod.status.toLowerCase()}`;
+                
+                row.innerHTML = `
+                    <td class="mod-name">${mod.name}</td>
+                    <td><span class="status ${mod.status.toLowerCase()}">${mod.status}</span></td>
+                    <td>${mod.notes}</td>
+                    <td class="final-entry">${mod.finalEntry}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            updateStats();
+        }
+
+        function filterTable(filter) {
+            const rows = document.querySelectorAll('.mod-row');
+            const buttons = document.querySelectorAll('.filter-btn');
+            
+            // Update active button
+            buttons.forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.filter-${filter}`).classList.add('active');
+            
+            // Filter rows
+            rows.forEach(row => {
+                if (filter === 'all') {
+                    row.classList.remove('row-hidden');
+                } else {
+                    if (row.classList.contains(filter)) {
+                        row.classList.remove('row-hidden');
+                    } else {
+                        row.classList.add('row-hidden');
+                    }
+                }
+            });
+            
+            updateStats();
+        }
+
+        function searchTable() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const rows = document.querySelectorAll('.mod-row');
+            
+            rows.forEach(row => {
+                const modName = row.querySelector('.mod-name').textContent.toLowerCase();
+                const notes = row.querySelectorAll('td')[2].textContent.toLowerCase();
+                const finalEntry = row.querySelector('.final-entry').textContent.toLowerCase();
+                
+                if (modName.includes(filter) || notes.includes(filter) || finalEntry.includes(filter)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function updateStats() {
+            const visibleRows = document.querySelectorAll('.mod-row:not(.row-hidden):not([style*="display: none"])');
+            const acceptedRows = Array.from(visibleRows).filter(row => row.classList.contains('accepted'));
+            const rejectedRows = Array.from(visibleRows).filter(row => row.classList.contains('rejected'));
+            
+            document.getElementById('totalCount').textContent = visibleRows.length;
+            document.getElementById('acceptedCount').textContent = acceptedRows.length;
+            document.getElementById('rejectedCount').textContent = rejectedRows.length;
+        }
+
+        // Initialize the table on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            populateTable();
+            updateLastUpdated();
+        });
+
+        function updateLastUpdated() {
+            const now = new Date();
+            const timeString = now.toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('lastUpdated').textContent = timeString;
+        }
+
+        function exportToCSV() {
+            const visibleRows = document.querySelectorAll('.mod-row:not(.row-hidden):not([style*="display: none"])');
+            let csv = 'Mod Name,Status,Notes,Final Modlist Entry\n';
+            
+            Array.from(visibleRows).forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowData = Array.from(cells).map(cell => {
+                    let text = cell.textContent.trim();
+                    // Escape quotes and wrap in quotes if contains comma
+                    if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+                        text = '"' + text.replace(/"/g, '""') + '"';
+                    }
+                    return text;
+                });
+                csv += rowData.join(',') + '\n';
+            });
+            
+            // Create download
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `modpack-analysis-${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'f':
+                        e.preventDefault();
+                        document.getElementById('searchInput').focus();
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        exportToCSV();
+                        break;
+                }
+            }
+            
+            // Number keys for filters
+            if (!e.target.matches('input')) {
+                switch(e.key) {
+                    case '1':
+                        filterTable('all');
+                        break;
+                    case '2':
+                        filterTable('accepted');
+                        break;
+                    case '3':
+                        filterTable('rejected');
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
